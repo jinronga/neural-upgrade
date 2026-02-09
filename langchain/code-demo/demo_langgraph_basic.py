@@ -2,6 +2,7 @@ import os
 from typing import TypedDict, List, Annotated, Literal
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
+from langchain_core.tools import tool
 import operator
 
 
@@ -47,7 +48,15 @@ llm = ChatOpenAI(
 )
 
 # 4. 绑定工具到模型
-from langchain.tools.render import render_text_description
+# 手动实现工具描述函数（替代 render_text_description）
+def render_text_description(tools):
+    """将工具列表转换为文本描述"""
+    descriptions = []
+    for t in tools:
+        desc = f"- {t.name}: {t.description}"
+        descriptions.append(desc)
+    return "\n".join(descriptions)
+
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 # 创建带工具调用能力的LLM
