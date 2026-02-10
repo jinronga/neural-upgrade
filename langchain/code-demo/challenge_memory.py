@@ -1,4 +1,4 @@
-# 添加对话记忆功能
+# 添加对话记忆功能（纯本地版本，不依赖 LLM）
 import json
 import os
 from datetime import datetime
@@ -189,13 +189,13 @@ def memory_enhanced_planning(state: MemoryEnhancedState):
 
 # 使用示例
 def test_memory_system():
-    """测试记忆系统"""
+    """测试记忆系统（本地运行，无需 LLM 和环境变量）"""
     memory_manager = MemoryManager()
     
     # 模拟对话
     conversation_id = "test_conv_001"
     
-    # 第一次对话
+    # 第一次对话：写入一些记忆
     memory = memory_manager.get_memory(conversation_id)
     memory.update({
         "entities": {"用户": "学习者", "兴趣": "AI编程"},
@@ -206,7 +206,10 @@ def test_memory_system():
     context = memory_manager.extract_memory_context(conversation_id, "如何学习LangGraph？")
     print("记忆上下文:", context)
     
-    # 保存
+    # 保存到本地文件
     memory_manager.save_memories()
 
-# test_memory_system()
+
+if __name__ == "__main__":
+    # 直接运行本文件时，演示记忆系统的读写
+    test_memory_system()

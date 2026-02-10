@@ -4,9 +4,6 @@ from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 import json
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # ========== 1. 增强的状态定义 ==========
 class MultiToolState(TypedDict):
@@ -127,14 +124,27 @@ tools_dict = {tool.name: tool for tool in tools}
 # ========== 3. 初始化LLM ==========
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.tools.render import render_text_description
+
+# 参考 demo_advanced_tools 的 ARK 配置
+ARK_API_KEY = os.getenv("ARK_API_KEY")
+ARK_MODEL = os.getenv("ARK_MODEL")
+ARK_BASE_URL = os.getenv("ARK_BASE_URL")
 
 llm = ChatOpenAI(
-    model=os.getenv("MODEL_NAME", "gpt-3.5-turbo"),
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
-    openai_api_base=os.getenv("OPENAI_API_BASE"),
+    model=ARK_MODEL,
+    api_key=ARK_API_KEY,
+    base_url=ARK_BASE_URL,
     temperature=0.1,
 )
+
+
+def render_text_description(tools):
+    """将工具列表转换为文本描述"""
+    descriptions = []
+    for t in tools:
+        desc = f"- {t.name}: {t.description}"
+        descriptions.append(desc)
+    return "\n".join(descriptions)
 
 # ========== 4. 智能规划节点 ==========
 def planning_node(state: MultiToolState):

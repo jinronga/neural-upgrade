@@ -1,0 +1,18 @@
+{
+  "test_conv_001": {
+    "conversation_id": "test_conv_001",
+    "user_id": "default",
+    "context_window": 10,
+    "summary": "",
+    "entities": {
+      "用户": "学习者",
+      "兴趣": "AI编程"
+    },
+    "preferences": [
+      "喜欢详细解释",
+      "需要示例代码"
+    ],
+    "created_at": "2026-02-10T23:19:06.996623",
+    "updated_at": "2026-02-10T23:19:33.409933"
+  }
+}

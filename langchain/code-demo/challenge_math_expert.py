@@ -1,8 +1,23 @@
 # 数学专家智能体
+import os
+import json
 import sympy as sp
 import numpy as np
 from typing import List, Dict, Any
 import re
+from langchain_openai import ChatOpenAI
+
+ARK_API_KEY = os.getenv("ARK_API_KEY")
+ARK_MODEL = os.getenv("ARK_MODEL")
+ARK_BASE_URL = os.getenv("ARK_BASE_URL")
+
+llm = ChatOpenAI(
+    model=ARK_MODEL,
+    api_key=ARK_API_KEY,
+    base_url=ARK_BASE_URL,
+    temperature=0.1,
+)
+
 
 class MathExpertAgent:
     """数学专家智能体"""
@@ -256,7 +271,13 @@ def test_math_expert():
 if __name__ == "__main__":
     # 运行测试
     print("测试多工具调用:")
-    test_multi_tool()
+    try:
+        # 与 challenge_multi_tool.py 同目录时可直接导入
+        from challenge_multi_tool import test_multi_tool
+
+        test_multi_tool()
+    except Exception as e:
+        print(f"跳过多工具测试（导入或执行失败）: {e}")
     
     print("\n\n测试数学专家:")
     test_math_expert()
