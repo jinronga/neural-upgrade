@@ -100,10 +100,11 @@ router_prompt = ChatPromptTemplate.from_messages(
             """你是一个路由助手，负责为完整智能体选择合适的处理模块。
 
 可用模块：
-- "multi_tool"：适用于需要多步工具计算的问题，例如：
+- "multi_tool"：适用于需要多步工具计算或外部能力的问题，例如：
   - 单位换算 + 数学计算
   - 货币换算 + 加总
   - 组合使用时间、计算器、单位转换等工具
+  - 需要进行实时信息搜索或读取项目内文件内容的问题
 - "math_expert"：适用于中等及以上难度的数学题，例如：
   - 解方程、几何计算、微积分、数列等
   - 需要严格数学推导和详细步骤的题目
@@ -147,7 +148,20 @@ def router_node(state: CompleteAgentState) -> CompleteAgentState:
                 route = "math_expert"
             elif any(
                 k in last
-                for k in ["单位", "换算", "公里", "厘米", "美元", "人民币", "欧元"]
+                for k in [
+                    "单位",
+                    "换算",
+                    "公里",
+                    "厘米",
+                    "美元",
+                    "人民币",
+                    "欧元",
+                    "搜索",
+                    "查一下",
+                    "最新",
+                    "打开文件",
+                    "读取文件",
+                ]
             ):
                 route = "multi_tool"
             state["route"] = route

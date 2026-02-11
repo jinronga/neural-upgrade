@@ -19,6 +19,7 @@ class MultiToolState(TypedDict):
 from langchain.tools import tool
 from datetime import datetime
 import math
+import os
 
 @tool
 def calculator(expression: str) -> float:
@@ -117,8 +118,62 @@ def currency_converter(amount: float, from_currency: str, to_currency: str) -> s
     
     return f"暂不支持 {from_currency} 或 {to_currency}"
 
+@tool
+def realtime_search(query: str) -> str:
+    """实时搜索最新信息（DuckDuckGo 简单封装）"""
+    try:
+        from duckduckgo_search import DDGS
+    except ImportError:
+        return "搜索功能需要安装 duckduckgo-search：pip install duckduckgo-search"
+
+    try:
+        with DDGS() as ddgs:
+            results = list(ddgs.text(query, max_results=3))
+        if not results:
+            return "没有找到相关信息。"
+        lines = []
+        for i, r in enumerate(results, 1):
+            lines.append(
+                f"{i}. {r.get('title', '')}\n{r.get('body', '')}\n{r.get('href', '')}"
+            )
+        return "\n\n".join(lines)
+    except Exception as e:
+        return f"搜索失败: {e}"
+
+
+@tool
+def read_file(filepath: str) -> str:
+    """读取项目内文本文件内容（相对路径，带简单安全限制）"""
+    try:
+        # 禁止绝对路径和上级目录，避免误读系统文件
+        if filepath.startswith("/") or ".." in filepath:
+            return "出于安全考虑，不支持读取绝对路径或上级目录的文件。"
+
+        base_dir = os.path.dirname(__file__)
+        full_path = os.path.join(base_dir, filepath)
+
+        if not os.path.exists(full_path):
+            return f"文件不存在: {filepath}"
+
+        with open(full_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        if len(content) > 4000:
+            return content[:4000] + "\n...\n(内容过长，已截断)"
+        return content
+    except Exception as e:
+        return f"读取文件失败: {e}"
+
+
 # 工具集合
-tools = [calculator, get_current_time, unit_converter, currency_converter]
+tools = [
+    calculator,
+    get_current_time,
+    unit_converter,
+    currency_converter,
+    realtime_search,
+    read_file,
+]
 tools_dict = {tool.name: tool for tool in tools}
 
 # ========== 3. 初始化LLM ==========

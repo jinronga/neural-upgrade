@@ -186,6 +186,19 @@ class MathExpertAgent:
         print(f"\n[步骤4] 生成详细解释...")
         explanation = self.generate_explanation(problem, verified_solution, analysis)
         
+        # 5. （可选）生成可视化图
+        try:
+            steps = [
+                {"description": "问题分析", "result": json.dumps(analysis, ensure_ascii=False)},
+                {"description": "求解过程", "result": solution},
+                {"description": "验证与修正", "result": verified_solution},
+            ]
+            fig = visualize_solution(problem, steps)
+            fig.savefig("math_solution.png")
+            print("已生成可视化图: math_solution.png")
+        except Exception as e:
+            print(f"生成可视化图失败: {e}")
+        
         return explanation
     
     def general_math_solution(self, problem: str, analysis: Dict) -> str:
@@ -244,6 +257,31 @@ class MathExpertAgent:
         
         response = self.llm.invoke(prompt)
         return response.content
+
+
+from typing import List as _List, Dict as _Dict
+
+def visualize_solution(problem: str, steps: _List[_Dict]):
+    """可视化数学求解步骤，返回 Matplotlib Figure"""
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.set_title("解题步骤可视化")
+    ax.axis("off")
+
+    lines = [f"题目：{problem}", ""]
+    for i, step in enumerate(steps, 1):
+        desc = step.get("description", "")
+        result = step.get("result", "")
+        lines.append(f"步骤 {i}: {desc}")
+        if result:
+            lines.append(f"  结果: {result}")
+        lines.append("")
+
+    text = "\n".join(lines)
+    ax.text(0.01, 0.99, text, va="top", ha="left", fontsize=10, wrap=True)
+
+    return fig
 
 # 测试数学专家
 def test_math_expert():
