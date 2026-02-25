@@ -15,7 +15,7 @@ const MessageList: React.FC<Props> = ({ messages }) => {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white px-4 py-3">
       {messages.map((m) => (
         <MessageItem key={m.id} message={m} />
       ))}
