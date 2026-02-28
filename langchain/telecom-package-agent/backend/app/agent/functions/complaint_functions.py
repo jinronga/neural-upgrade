@@ -35,10 +35,11 @@ async def classify_complaint(message: str) -> dict:
 - 当用户包含明显负面词汇（如“气死我了”“太差了”“投诉”“坑”等）或多次强调影响严重时，sentiment 多为 "angry"，urgency 至少 "medium"。
 - 当 sentiment 为 "angry" 且投诉涉及扣费错误或网络长期无法使用时，建议 need_human 为 true。
 """
+    llm_kwargs = settings.get_openai_client_kwargs()
     llm = ChatOpenAI(
         model="gpt-3.5-turbo",
         temperature=0.0,
-        openai_api_key=settings.OPENAI_API_KEY,
+        **llm_kwargs,
     )
     import json
 

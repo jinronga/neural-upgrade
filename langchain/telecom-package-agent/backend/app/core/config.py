@@ -17,6 +17,14 @@ else:
     load_dotenv()
 
 
+def _read_optional_env(name: str) -> Optional[str]:
+    value = os.getenv(name)
+    if value is None:
+        return None
+    value = value.strip()
+    return value or None
+
+
 class Settings(BaseModel):
     """Application settings loaded from environment variables."""
 
@@ -29,9 +37,19 @@ class Settings(BaseModel):
     )
 
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+    # 只支持一个配置项：OPENAI_BASE_URL。未配置或配置为空字符串时视为 None。
+    OPENAI_BASE_URL: Optional[str] = _read_optional_env("OPENAI_BASE_URL")
 
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
+    def get_openai_client_kwargs(self) -> dict[str, str]:
+        """构建 ChatOpenAI 的通用参数，便于统一接入 OpenAI 兼容服务。"""
+        kwargs: dict[str, str] = {}
+        if self.OPENAI_API_KEY:
+            kwargs["openai_api_key"] = self.OPENAI_API_KEY
+        if self.OPENAI_BASE_URL:
+            kwargs["base_url"] = self.OPENAI_BASE_URL.rstrip("/")
+        return kwargs
+
 
 settings = Settings()
-

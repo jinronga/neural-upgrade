@@ -26,6 +26,9 @@ REDIS_URL=redis://localhost:6379/0
 
 # OpenAI API Key（Chat 功能需要）
 OPENAI_API_KEY=sk-your-key-here
+
+# OpenAI 兼容服务地址（可选；不填则默认官方 OpenAI）
+OPENAI_BASE_URL=https://your-openai-compatible-host/v1
 ```
 
 示例：
@@ -33,6 +36,8 @@ OPENAI_API_KEY=sk-your-key-here
 ```env
 SQLALCHEMY_DATABASE_URI=mysql+pymysql://your_user:your_password@localhost:3306/telecom_package_agent?charset=utf8mb4
 REDIS_URL=redis://localhost:6379/0
+OPENAI_API_KEY=sk-your-key-here
+OPENAI_BASE_URL=https://your-openai-compatible-host/v1
 ```
 
 > 将 `your_user` 和 `your_password` 替换为你的 MySQL 用户名和密码。

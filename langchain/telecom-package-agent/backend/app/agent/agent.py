@@ -112,10 +112,11 @@ class TelecomAgent:
 
     def _init_llm(self) -> ChatOpenAI:
         """初始化通用对话 LLM。"""
+        llm_kwargs = settings.get_openai_client_kwargs()
         return ChatOpenAI(
             model="gpt-3.5-turbo",
             temperature=0.7,
-            openai_api_key=settings.OPENAI_API_KEY,
+            **llm_kwargs,
         )
 
     def _extract_llm_text(self, content: Any) -> str:
@@ -189,10 +190,11 @@ class TelecomAgent:
   "target_group": "student|business|elder|general|'' （如能从语义中判断用户人群）"
 }}
 """
+        llm_kwargs = settings.get_openai_client_kwargs()
         llm = ChatOpenAI(
             model="gpt-3.5-turbo",
             temperature=0.0,
-            openai_api_key=settings.OPENAI_API_KEY,
+            **llm_kwargs,
         )
         try:
             resp = await llm.ainvoke(prompt)
@@ -705,10 +707,11 @@ class TelecomAgent:
 请务必输出合法 JSON，确保 domain 与 intent.type 与上述约定对齐。
 """
 
+        llm_kwargs = settings.get_openai_client_kwargs()
         llm = ChatOpenAI(
             model="gpt-3.5-turbo",
             temperature=0.0,
-            openai_api_key=settings.OPENAI_API_KEY,
+            **llm_kwargs,
         )
         try:
             resp = await llm.ainvoke(prompt)
