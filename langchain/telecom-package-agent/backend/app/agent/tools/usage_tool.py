@@ -18,8 +18,8 @@ class UsageQueryInput(BaseModel):
 class QueryUsageTool(BaseTool):
     """LangChain tool that queries realtime usage for a user."""
 
-    name = "query_usage"
-    description = "查询用户的实时流量、语音使用情况"
+    name: str = "query_usage"
+    description: str = "查询用户的实时流量、语音使用情况"
     args_schema: Type[BaseModel] = UsageQueryInput
 
     def __init__(self, db_session_factory: sessionmaker, **kwargs):

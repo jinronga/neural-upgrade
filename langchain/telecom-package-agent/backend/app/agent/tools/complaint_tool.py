@@ -20,8 +20,8 @@ class HandleComplaintInput(BaseModel):
 class HandleComplaintTool(BaseTool):
     """LangChain tool that creates a complaint ticket for the user."""
 
-    name = "handle_complaint"
-    description = "为用户创建投诉工单并记录问题"
+    name: str = "handle_complaint"
+    description: str = "为用户创建投诉工单并记录问题"
     args_schema: Type[BaseModel] = HandleComplaintInput
 
     def __init__(self, db_session_factory: sessionmaker, **kwargs):

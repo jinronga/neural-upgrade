@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,15 +13,15 @@ class Benefit(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), index=True)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     inventory: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    package_id: Mapped[int | None] = mapped_column(
+    package_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("package.id", ondelete="SET NULL"), nullable=True
     )
 
-    package: Mapped["Package | None"] = relationship(back_populates="benefits")
+    package: Mapped[Optional["Package"]] = relationship(back_populates="benefits")
     user_benefits: Mapped[list["UserBenefit"]] = relationship(
         back_populates="benefit", cascade="all, delete-orphan"
     )

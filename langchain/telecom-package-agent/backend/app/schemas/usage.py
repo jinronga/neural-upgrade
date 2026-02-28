@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -20,6 +21,6 @@ class UsageRecordItem(BaseModel):
     id: int
     record_time: datetime
     used_mb: float
-    network_type: str | None = None
-    location: str | None = None
+    network_type: Optional[str] = None
+    location: Optional[str] = None
 

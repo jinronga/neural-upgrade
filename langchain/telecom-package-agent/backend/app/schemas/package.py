@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -10,7 +12,7 @@ class PackageRead(BaseModel):
 
     id: int
     name: str
-    description: str | None = None
+    description: Optional[str] = None
     monthly_fee: float
     data_quota_gb: float
     validity_days: int
@@ -20,13 +22,13 @@ class PackageRead(BaseModel):
 class PackageRecommendRequest(BaseModel):
     """Request body for package recommendation."""
 
-    monthly_budget: float | None = None
-    min_data_gb: float | None = None
+    monthly_budget: Optional[float] = None
+    min_data_gb: Optional[float] = None
     limit: int = 3
 
 
 class PackageRecommendResponse(BaseModel):
     """Recommended packages response."""
 
-    recommendations: list[PackageRead]
+    recommendations: List[PackageRead]
 

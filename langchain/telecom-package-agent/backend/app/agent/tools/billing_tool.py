@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Type
+from typing import Optional, Type
 
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -26,7 +26,7 @@ class RefundInput(BaseModel):
 class NetworkStatusInput(BaseModel):
     """Input schema for checking network status."""
 
-    location: str | None = Field(
+    location: Optional[str] = Field(
         default=None, description="可选，所在城市或地区名称，用于给出更贴近的网络状态描述"
     )
 
@@ -34,8 +34,8 @@ class NetworkStatusInput(BaseModel):
 class BillingQueryTool(BaseTool):
     """LangChain tool that queries user's realtime balance."""
 
-    name = "query_realtime_balance"
-    description = "查询用户当前话费/余额情况"
+    name: str = "query_realtime_balance"
+    description: str = "查询用户当前话费/余额情况"
     args_schema: Type[BaseModel] = BillingQueryInput
 
     def __init__(self, db_session_factory: sessionmaker, **kwargs):
@@ -66,8 +66,8 @@ class BillingQueryTool(BaseTool):
 class ProcessRefundTool(BaseTool):
     """LangChain tool that processes a refund for the user."""
 
-    name = "process_refund"
-    description = "为用户发起退款申请"
+    name: str = "process_refund"
+    description: str = "为用户发起退款申请"
     args_schema: Type[BaseModel] = RefundInput
 
     def __init__(self, db_session_factory: sessionmaker, **kwargs):
@@ -104,11 +104,11 @@ class ProcessRefundTool(BaseTool):
 class CheckNetworkStatusTool(BaseTool):
     """LangChain tool that returns a human-friendly description of network status."""
 
-    name = "check_network_status"
-    description = "查询当前网络状态，用于安抚用户或排查问题前的说明"
+    name: str = "check_network_status"
+    description: str = "查询当前网络状态，用于安抚用户或排查问题前的说明"
     args_schema: Type[BaseModel] = NetworkStatusInput
 
-    def _run(self, location: str | None = None) -> str:
+    def _run(self, location: Optional[str] = None) -> str:
         # 在真实环境中，这里可以接入网络监控系统或告警平台。
         prefix = f"当前{location}地区" if location else "当前你所在地区"
         return (
@@ -116,6 +116,6 @@ class CheckNetworkStatusTool(BaseTool):
             "可以尝试重启手机、切换飞行模式，或向我描述更具体的场景，我会继续帮你排查。"
         )
 
-    async def _arun(self, location: str | None = None) -> str:  # pragma: no cover
+    async def _arun(self, location: Optional[str] = None) -> str:  # pragma: no cover
         raise NotImplementedError("CheckNetworkStatusTool 暂不支持异步调用。")
 

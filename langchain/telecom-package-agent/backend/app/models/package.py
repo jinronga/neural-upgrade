@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy import Boolean, Float, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,7 +13,7 @@ class Package(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), index=True)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     monthly_fee: Mapped[float] = mapped_column(Float, nullable=False)
     data_quota_gb: Mapped[float] = mapped_column(Float, nullable=False)
     validity_days: Mapped[int] = mapped_column(nullable=False, default=30)

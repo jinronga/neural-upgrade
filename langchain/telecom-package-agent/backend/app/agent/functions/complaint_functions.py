@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.database import SessionLocal
 from app.models import Complaint, User
 from app.services import user_service
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 
 
 async def classify_complaint(message: str) -> dict:
@@ -303,4 +303,3 @@ async def auto_compensate(user_id: str, issue_type: str) -> dict:
         }
     finally:
         db.close()
-

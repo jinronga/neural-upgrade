@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -12,8 +13,8 @@ class UserRead(BaseModel):
 
     id: int
     phone_number: str
-    name: str | None = None
-    email: str | None = None
+    name: Optional[str] = None
+    email: Optional[str] = None
     status: str
-    registered_at: datetime | None = None
+    registered_at: Optional[datetime] = None
 

@@ -5,13 +5,8 @@ import json
 from typing import Any, Dict, List
 
 import redis
-from langchain.agents import AgentExecutor
-from langchain.agents.format_scratchpad import format_to_openai_function_messages
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema import AIMessage, BaseMessage, HumanMessage
-from langchain.tools import BaseTool
-from langchain.tools.render import format_tool_to_openai_function
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 
 from app.agent.memory.conversation_memory import ConversationMemory
 from app.agent.prompts.system_prompt import get_system_prompt
@@ -98,49 +93,51 @@ class TelecomAgent:
         self.session_id = session_id
         self.memory = SessionConversationMemory(session_id)
         self.tools = self._init_tools()
-        self.agent = self._init_agent()
+        self.llm = self._init_llm()
 
-    def _init_tools(self) -> List[BaseTool]:
-        """初始化所有工具。"""
+    def _init_tools(self) -> List[Any]:
+        """初始化工具（当前版本用于保留扩展能力，失败时降级为空列表）。"""
         db_factory = SessionLocal
-        return [
-            QueryUsageTool(db_session_factory=db_factory),
-            RecommendPackageTool(db_session_factory=db_factory),
-            GetPendingBenefitsTool(db_session_factory=db_factory),
-            ClaimBenefitTool(db_session_factory=db_factory),
-            HandleComplaintTool(db_session_factory=db_factory),
-            CheckNetworkStatusTool(),
-        ]
-
-    def _init_agent(self) -> AgentExecutor:
-        """初始化 LangChain Agent。"""
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", SYSTEM_PROMPT),
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("human", "{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad"),
+        try:
+            return [
+                QueryUsageTool(db_session_factory=db_factory),
+                RecommendPackageTool(db_session_factory=db_factory),
+                GetPendingBenefitsTool(db_session_factory=db_factory),
+                ClaimBenefitTool(db_session_factory=db_factory),
+                HandleComplaintTool(db_session_factory=db_factory),
+                CheckNetworkStatusTool(),
             ]
-        )
+        except Exception:
+            return []
 
-        llm = ChatOpenAI(
+    def _init_llm(self) -> ChatOpenAI:
+        """初始化通用对话 LLM。"""
+        return ChatOpenAI(
             model="gpt-3.5-turbo",
             temperature=0.7,
             openai_api_key=settings.OPENAI_API_KEY,
         )
-        llm_with_tools = llm.bind(
-            functions=[format_tool_to_openai_function(t) for t in self.tools]
-        )
 
-        agent_chain = {
-            "input": lambda x: x["input"],
-            "chat_history": lambda x: self.memory.get_chat_history(),
-            "agent_scratchpad": lambda x: format_to_openai_function_messages(
-                x["intermediate_steps"]
-            ),
-        } | prompt | llm_with_tools
-
-        return AgentExecutor(agent=agent_chain, tools=self.tools, verbose=True)
+    def _extract_llm_text(self, content: Any) -> str:
+        """兼容不同 LangChain 版本的响应 content 结构。"""
+        if isinstance(content, str):
+            return content.strip()
+        if isinstance(content, list):
+            parts: list[str] = []
+            for item in content:
+                if isinstance(item, str):
+                    parts.append(item)
+                    continue
+                if isinstance(item, dict):
+                    text = item.get("text")
+                    if isinstance(text, str):
+                        parts.append(text)
+                        continue
+                    nested = item.get("content")
+                    if isinstance(nested, str):
+                        parts.append(nested)
+            return "\n".join(p for p in parts if p).strip()
+        return str(content).strip()
 
     async def handle_package_query(self, message: str, intent: Dict[str, Any]) -> str:
         """处理套餐相关查询（供上层根据意图调用）。"""
@@ -769,8 +766,15 @@ class TelecomAgent:
         profile_text = json.dumps(user_profile, ensure_ascii=False)
         full_input = f"用户画像：{profile_text}\n\n用户问题：{message}"
 
-        response = await self.agent.ainvoke({"input": full_input})
-        output_text = str(response.get("output", ""))
+        messages: list[BaseMessage] = [
+            SystemMessage(content=SYSTEM_PROMPT),
+            *self.memory.get_chat_history(),
+            HumanMessage(content=full_input),
+        ]
+        response = await self.llm.ainvoke(messages)
+        output_text = self._extract_llm_text(getattr(response, "content", ""))
+        if not output_text:
+            output_text = "抱歉，我暂时没能生成有效回复，请稍后重试。"
 
         self.memory.add_message("human", message)
         self.memory.add_message("ai", output_text)

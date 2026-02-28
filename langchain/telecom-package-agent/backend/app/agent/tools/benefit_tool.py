@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Type
+from typing import List, Type
 
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -26,8 +26,8 @@ class ClaimBenefitInput(BaseModel):
 class GetPendingBenefitsTool(BaseTool):
     """LangChain tool that returns benefits a user can still claim."""
 
-    name = "get_pending_benefits"
-    description = "查询用户尚未领取的可用权益"
+    name: str = "get_pending_benefits"
+    description: str = "查询用户尚未领取的可用权益"
     args_schema: Type[BaseModel] = GetPendingBenefitsInput
 
     def __init__(self, db_session_factory: sessionmaker, **kwargs):
@@ -49,7 +49,7 @@ class GetPendingBenefitsTool(BaseTool):
         if not benefits:
             return "当前没有可领取的权益。"
 
-        lines: list[str] = ["你可以领取以下权益："]
+        lines: List[str] = ["你可以领取以下权益："]
         for b in benefits:
             lines.append(f"- {b.name}：{b.description or '暂无描述'}")
         return "\n".join(lines)
@@ -61,8 +61,8 @@ class GetPendingBenefitsTool(BaseTool):
 class ClaimBenefitTool(BaseTool):
     """LangChain tool that claims a specific benefit for a user."""
 
-    name = "claim_benefit"
-    description = "为用户领取指定权益"
+    name: str = "claim_benefit"
+    description: str = "为用户领取指定权益"
     args_schema: Type[BaseModel] = ClaimBenefitInput
 
     def __init__(self, db_session_factory: sessionmaker, **kwargs):

@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-
-load_dotenv()
+# 确保从 backend 或项目根目录都能加载 .env
+_backend_dir = Path(__file__).resolve().parent.parent.parent
+for _env_path in (_backend_dir / ".env", _backend_dir.parent / ".env"):
+    if _env_path.exists():
+        load_dotenv(_env_path)
+        break
+else:
+    load_dotenv()
 
 
 class Settings(BaseModel):

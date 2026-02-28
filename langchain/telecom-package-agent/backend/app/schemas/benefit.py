@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -10,7 +12,7 @@ class BenefitRead(BaseModel):
 
     id: int
     name: str
-    description: str | None = None
+    description: Optional[str] = None
     is_active: bool
     inventory: int
 
