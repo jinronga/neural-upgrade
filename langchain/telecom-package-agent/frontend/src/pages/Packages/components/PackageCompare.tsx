@@ -30,6 +30,7 @@ const PackageCompare: React.FC<Props> = ({ packages }) => {
               <span>流量 {p.dataGb}GB</span>
               <span>语音 {p.voiceMinutes} 分钟</span>
               <span>短信 {p.smsCount} 条</span>
+              <span>有效期 {p.validityDays} 天</span>
             </div>
             <div className="mt-1 text-[11px] text-gray-500">
               {p.description}
@@ -42,4 +43,3 @@ const PackageCompare: React.FC<Props> = ({ packages }) => {
 };
 
 export default PackageCompare;
-

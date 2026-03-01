@@ -1,46 +1,38 @@
 import axios, {
   AxiosError,
+  AxiosHeaders,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
 } from "axios";
 
-// ---------- 基础配置 ----------
-
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8005",
   timeout: 15000,
 });
 
-// 请求拦截器：注入 token 等
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
     if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+      const headers = AxiosHeaders.from(config.headers);
+      headers.set("Authorization", `Bearer ${token}`);
+      config.headers = headers;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 响应拦截器：统一错误处理 / 日志
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
-    // 这里可以根据 error.response?.status 做统一处理（如跳转登录、toast 等）
-    // 先简单透传，具体 UI 层再根据 detail 显示。
     console.error("API Error:", error.response ?? error.message);
     return Promise.reject(error);
   }
 );
 
-// ---------- 泛型 GET / POST 封装 ----------
-
-export async function get<T = any>(
+export async function get<T = unknown>(
   url: string,
   config?: AxiosRequestConfig
 ): Promise<T> {
@@ -48,7 +40,7 @@ export async function get<T = any>(
   return resp.data;
 }
 
-export async function post<T = any, B = any>(
+export async function post<T = unknown, B = unknown>(
   url: string,
   data?: B,
   config?: AxiosRequestConfig
@@ -57,102 +49,282 @@ export async function post<T = any, B = any>(
   return resp.data;
 }
 
-// ---------- 业务类型 ----------
-
-// 根据需要在其它模块复用这些类型
-export interface PackageFilter {
-  keyword?: string;
-  maxPrice?: number;
-  targetGroup?: "student" | "business" | "elder" | "general";
+export async function put<T = unknown, B = unknown>(
+  url: string,
+  data?: B,
+  config?: AxiosRequestConfig
+): Promise<T> {
+  const resp = await api.put<T>(url, data, config);
+  return resp.data;
 }
 
-export interface ChatRequest {
+export async function del(
+  url: string,
+  config?: AxiosRequestConfig
+): Promise<void> {
+  await api.delete(url, config);
+}
+
+export interface ApiUser {
+  id: number;
+  phone_number: string;
+  name?: string | null;
+  email?: string | null;
+  status: string;
+  registered_at?: string | null;
+}
+
+export interface ApiUserUpsertPayload {
+  phone_number: string;
+  name?: string;
+  email?: string;
+  status?: string;
+  registered_at?: string;
+}
+
+export interface ApiUserPageResponse {
+  items: ApiUser[];
+  page: number;
+  page_size: number;
+  total: number;
+}
+
+export interface ApiPackage {
+  id: number;
+  name: string;
+  description?: string | null;
+  monthly_fee: number;
+  data_quota_gb: number;
+  validity_days: number;
+  is_active: boolean;
+}
+
+export interface ApiPackagePageResponse {
+  items: ApiPackage[];
+  page: number;
+  page_size: number;
+  total: number;
+}
+
+export interface ApiUserPackageRelation {
+  id: number;
+  user_id: number;
+  phone_number: string;
+  package_id: number;
+  package_name: string;
+  monthly_fee: number;
+  data_quota_gb: number;
+  validity_days: number;
+  start_date: string;
+  end_date?: string | null;
+  status: string;
+  auto_renew: boolean;
+  is_current: boolean;
+}
+
+export interface ApiUserCurrentPackageResponse {
+  item?: ApiUserPackageRelation | null;
+}
+
+export interface ApiUserPackageAssignPayload {
+  package_id: number;
+  effective_from?: string;
+  auto_renew?: boolean;
+}
+
+export interface ApiUserPackageHistoryPageResponse {
+  items: ApiUserPackageRelation[];
+  page: number;
+  page_size: number;
+  total: number;
+}
+
+export interface ApiPackageUpsertPayload {
+  name: string;
+  description?: string;
+  monthly_fee: number;
+  data_quota_gb: number;
+  validity_days: number;
+  is_active: boolean;
+}
+
+export interface ApiBenefit {
+  id: number;
+  name: string;
+  description?: string | null;
+  is_active: boolean;
+  inventory: number;
+}
+
+export interface ApiUsageCurrent {
+  user_id: number;
+  total_used_mb: number;
+}
+
+export interface ApiUsageHistoryItem {
+  id: number;
+  record_time: string;
+  used_mb: number;
+  network_type?: string | null;
+  location?: string | null;
+}
+
+export interface ApiChatRequest {
   user_id: string;
   message: string;
-  session_id?: string | null;
-  channel?: string; // app/mini/web 等
+  session_id?: string;
+  channel?: string;
 }
 
-export interface HumanTransferRequest {
+export interface ApiChatResponse {
+  session_id: string;
+  response: string;
+  suggestions: string[];
+  quick_replies: string[];
+  need_human: boolean;
+  human_transfer_reason?: string | null;
+}
+
+export interface ApiHumanTransferRequest {
   session_id: string;
   user_id: string;
   reason: string;
 }
 
-// ---------- 用户相关 ----------
+export interface ApiPackageRecommendRequest {
+  monthly_budget?: number;
+  min_data_gb?: number;
+  limit?: number;
+}
 
-export const getUserInfo = (userId: string) =>
-  get(`/api/v1/users/${userId}`);
+export interface ApiPackageRecommendResponse {
+  recommendations: ApiPackage[];
+}
 
-export const getUserPackages = (userId: string) =>
-  get(`/api/v1/users/${userId}/packages`);
+export interface ApiBenefitClaimRequest {
+  user_id: number;
+  benefit_id: number;
+}
 
-// ---------- 套餐相关 ----------
+export interface ApiBenefitClaimResponse {
+  user_id: number;
+  benefit_id: number;
+  status: string;
+}
 
-export const getPackages = (params?: PackageFilter) =>
-  get("/api/v1/packages", { params });
+export interface ApiChatHistoryMessage {
+  role: string;
+  content: string;
+  timestamp: number;
+}
 
-/**
- * 推荐套餐
- *
- * 说明：
- * - 后端 /api/v1/packages/recommend 接受的实际字段为
- *   { monthly_budget?: number; min_data_gb?: number; limit?: number }
- * - 这里将 usageData 中的字段转换为后端期望的格式
- */
-export const recommendPackage = (
-  userId: string,
-  usageData?: {
-    monthlyBudget?: number;
-    minDataGb?: number;
-    limit?: number;
-  }
-) => {
-  const payload = {
-    // userId 目前仅用于链路透传，如需可在后端扩展
-    monthly_budget: usageData?.monthlyBudget,
-    min_data_gb: usageData?.minDataGb,
-    limit: usageData?.limit ?? 3,
-  };
-  return post("/api/v1/packages/recommend", payload);
-};
+export interface ApiChatHistoryResponse {
+  history: ApiChatHistoryMessage[];
+}
 
-// ---------- 权益相关 ----------
+export const getUserInfo = (userId: string | number) =>
+  get<ApiUser>(`/api/v1/users/${userId}`);
 
-export const getPendingBenefits = (userId: string) =>
-  get(`/api/v1/benefits/pending/${userId}`);
+export const getUsersPage = (params?: {
+  page?: number;
+  page_size?: number;
+  keyword?: string;
+}) => get<ApiUserPageResponse>("/api/v1/users/", { params });
 
-export const claimBenefit = (
-  userId: string,
-  benefitId: string,
-  channel: string
+export const createUser = (payload: ApiUserUpsertPayload) =>
+  post<ApiUser, ApiUserUpsertPayload>("/api/v1/users/", payload);
+
+export const updateUser = (
+  userId: string | number,
+  payload: Partial<ApiUserUpsertPayload>
 ) =>
-  post("/api/v1/benefits/claim", {
-    // 后端当前期望字段为 snake_case
-    user_id: Number(userId),
-    benefit_id: Number(benefitId),
-    channel,
-  });
+  put<ApiUser, Partial<ApiUserUpsertPayload>>(`/api/v1/users/${userId}`, payload);
 
-// ---------- 用量相关 ----------
+export const deleteUser = (userId: string | number) =>
+  del(`/api/v1/users/${userId}`);
 
-export const getCurrentUsage = (userId: string) =>
-  get(`/api/v1/usage/current/${userId}`);
+export const getUserPackages = (userId: string | number) =>
+  get<ApiPackage[]>(`/api/v1/users/${userId}/packages`);
 
-export const getUsageHistory = (userId: string, days: number) =>
-  get(`/api/v1/usage/history/${userId}`, {
-    params: { days },
-  });
+export const getCurrentUserPackage = (userId: string | number) =>
+  get<ApiUserCurrentPackageResponse>(`/api/v1/users/${userId}/packages/current`);
 
-// ---------- 聊天相关 ----------
+export const getUserPackageHistory = (
+  userId: string | number,
+  params?: { page?: number; page_size?: number }
+) =>
+  get<ApiUserPackageHistoryPageResponse>(
+    `/api/v1/users/${userId}/packages/history`,
+    { params }
+  );
 
-export const sendMessage = (data: ChatRequest) =>
-  post("/api/v1/chat", data);
+export const assignUserPackage = (
+  userId: string | number,
+  payload: ApiUserPackageAssignPayload
+) =>
+  post<ApiUserPackageRelation, ApiUserPackageAssignPayload>(
+    `/api/v1/users/${userId}/packages/assign`,
+    payload
+  );
 
-export const transferToHuman = (data: HumanTransferRequest) =>
-  post("/api/v1/chat/transfer-human", data);
+export const getUserBenefits = (userId: string | number) =>
+  get<ApiBenefit[]>(`/api/v1/users/${userId}/benefits`);
 
-// 默认导出 axios 实例，方便特殊场景直接使用
+export const getPackages = () => get<ApiPackage[]>("/api/v1/packages");
+
+export const getPackagesPage = (params?: {
+  page?: number;
+  page_size?: number;
+  keyword?: string;
+  include_inactive?: boolean;
+}) => get<ApiPackagePageResponse>("/api/v1/packages/paged", { params });
+
+export const getPackageDetail = (packageId: string | number) =>
+  get<ApiPackage>(`/api/v1/packages/${packageId}`);
+
+export const createPackage = (payload: ApiPackageUpsertPayload) =>
+  post<ApiPackage, ApiPackageUpsertPayload>("/api/v1/packages", payload);
+
+export const updatePackage = (
+  packageId: string | number,
+  payload: Partial<ApiPackageUpsertPayload>
+) =>
+  put<ApiPackage, Partial<ApiPackageUpsertPayload>>(
+    `/api/v1/packages/${packageId}`,
+    payload
+  );
+
+export const deletePackage = (packageId: string | number) =>
+  del(`/api/v1/packages/${packageId}`);
+
+export const recommendPackages = (payload: ApiPackageRecommendRequest) =>
+  post<ApiPackageRecommendResponse, ApiPackageRecommendRequest>(
+    "/api/v1/packages/recommend",
+    payload
+  );
+
+export const getPendingBenefits = (userId: string | number) =>
+  get<ApiBenefit[]>(`/api/v1/benefits/pending/${userId}`);
+
+export const claimBenefit = (payload: ApiBenefitClaimRequest) =>
+  post<ApiBenefitClaimResponse, ApiBenefitClaimRequest>(
+    "/api/v1/benefits/claim",
+    payload
+  );
+
+export const getCurrentUsage = (userId: string | number) =>
+  get<ApiUsageCurrent>(`/api/v1/usage/current/${userId}`);
+
+export const getUsageHistory = (userId: string | number) =>
+  get<ApiUsageHistoryItem[]>(`/api/v1/usage/history/${userId}`);
+
+export const sendMessage = (payload: ApiChatRequest) =>
+  post<ApiChatResponse, ApiChatRequest>("/api/v1/chat", payload);
+
+export const transferToHuman = (payload: ApiHumanTransferRequest) =>
+  post("/api/v1/chat/transfer-human", payload);
+
+export const getChatHistory = (sessionId: string) =>
+  get<ApiChatHistoryResponse>(`/api/v1/chat/history/${sessionId}`);
+
 export default api;
-
-

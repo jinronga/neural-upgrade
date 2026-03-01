@@ -7,7 +7,7 @@ export interface Message {
   quickReplies?: string[];
 }
 
-export interface ChatResponse {
+export interface ChatResult {
   sessionId: string;
   response: string;
   suggestions: string[];
@@ -15,4 +15,3 @@ export interface ChatResponse {
   needHuman: boolean;
   humanTransferReason?: string;
 }
-

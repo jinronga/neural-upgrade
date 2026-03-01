@@ -1,5 +1,4 @@
 import React from "react";
-import ReactMarkdown from "react-markdown";
 
 import type { Message } from "../types";
 
@@ -10,13 +9,12 @@ interface Props {
 const MessageItem: React.FC<Props> = ({ message }) => {
   const isUser = message.type === "user";
   const isAgent = message.type === "agent";
-  const isSystem = message.type === "system";
   const isHuman = message.type === "human";
 
   const align = isUser ? "justify-end" : "justify-start";
+  const contentAlign = isUser ? "items-end" : "items-start";
 
-  const bubbleBase =
-    "max-w-[75%] rounded-2xl px-4 py-2 text-sm shadow-sm";
+  const bubbleBase = "inline-block rounded-2xl px-4 py-2 text-sm shadow-sm";
   const bubbleColor = isUser
     ? "bg-blue-600 text-white"
     : isAgent
@@ -45,11 +43,11 @@ const MessageItem: React.FC<Props> = ({ message }) => {
           {nameLabel[0]}
         </div>
       )}
-      <div className="flex flex-col items-start">
+      <div className={`flex max-w-[min(75vw,42rem)] flex-col ${contentAlign}`}>
         <div className={`${bubbleBase} ${bubbleColor}`}>
-          <ReactMarkdown className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1">
+          <p className="m-0 whitespace-pre-wrap break-words leading-relaxed">
             {message.content}
-          </ReactMarkdown>
+          </p>
         </div>
         <div className="mt-1 text-[11px] text-gray-400">{timeText}</div>
       </div>
@@ -63,4 +61,3 @@ const MessageItem: React.FC<Props> = ({ message }) => {
 };
 
 export default MessageItem;
-

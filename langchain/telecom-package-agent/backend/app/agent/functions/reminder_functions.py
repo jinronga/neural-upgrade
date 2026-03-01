@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 
 from app.database import SessionLocal
 from app.models import Benefit, Package, User, UserBenefit, UserPackage
-from app.services import benefit_service, usage_service
+from app.services import benefit_service, usage_service, user_package_service
 
 
 async def check_package_expiry(user_id: str) -> dict:
@@ -32,7 +32,7 @@ async def check_package_expiry(user_id: str) -> dict:
             select(UserPackage)
             .where(
                 UserPackage.user_id == user_id_int,
-                UserPackage.status == "active",
+                *user_package_service.active_user_package_filters(),
             )
             .order_by(UserPackage.start_date.desc())
         )
@@ -93,7 +93,7 @@ async def calculate_renewal_offer(user_id: str) -> dict:
             select(UserPackage)
             .where(
                 UserPackage.user_id == user_id_int,
-                UserPackage.status == "active",
+                *user_package_service.active_user_package_filters(),
             )
             .order_by(UserPackage.start_date.asc())
         )
@@ -232,7 +232,9 @@ async def threshold_check_cron() -> dict:
     db = SessionLocal()
     try:
         # 简化：遍历所有 active 用户套餐，检查流量使用百分比
-        stmt = select(UserPackage.user_id).where(UserPackage.status == "active")
+        stmt = select(UserPackage.user_id).where(
+            *user_package_service.active_user_package_filters()
+        )
         user_ids = {row[0] for row in db.execute(stmt)}
 
         from app.agent.functions.usage_functions import get_realtime_usage
@@ -252,4 +254,3 @@ async def threshold_check_cron() -> dict:
         }
     finally:
         db.close()
-

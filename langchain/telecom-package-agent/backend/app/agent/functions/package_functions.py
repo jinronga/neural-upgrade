@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.database import SessionLocal
 from app.models import Package, UsageRecord, UserPackage
-from app.services import package_service
+from app.services import package_service, user_package_service
 
 
 def _package_to_dict(pkg: Package) -> dict:
@@ -35,15 +35,7 @@ async def get_current_package(user_id: str) -> dict:
         return {}
 
     try:
-        stmt = (
-            select(UserPackage)
-            .where(
-                UserPackage.user_id == user_id_int,
-                UserPackage.status == "active",
-            )
-            .order_by(UserPackage.start_date.desc())
-        )
-        user_pkg = db.execute(stmt).scalars().first()
+        user_pkg = user_package_service.get_current_user_package(db, user_id_int)
         if not user_pkg or not user_pkg.package:
             return {}
 
@@ -52,6 +44,9 @@ async def get_current_package(user_id: str) -> dict:
         data.update(
             {
                 "start_date": user_pkg.start_date.date().isoformat(),
+                "end_date": user_pkg.end_date.date().isoformat()
+                if user_pkg.end_date
+                else None,
                 "status": user_pkg.status,
             }
         )
@@ -90,7 +85,7 @@ async def get_available_packages(
                 .join(UserPackage, UserPackage.package_id == Package.id)
                 .where(
                     UserPackage.user_id == user_id_int,
-                    UserPackage.status == "active",
+                    *user_package_service.active_user_package_filters(),
                 )
             )
             current_monthly = float(db.execute(stmt_budget).scalar_one())
@@ -139,7 +134,7 @@ async def recommend_package(user_id: str) -> dict:
             .join(UserPackage, UserPackage.package_id == Package.id)
             .where(
                 UserPackage.user_id == user_id_int,
-                UserPackage.status == "active",
+                *user_package_service.active_user_package_filters(),
             )
         )
         current_monthly = float(db.execute(stmt_budget).scalar_one())
@@ -267,4 +262,3 @@ async def compare_packages(package_ids: List[str]) -> dict:
         return {"packages": rows, "fields": fields}
     finally:
         db.close()
-

@@ -1,8 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;700;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-gray-50 text-gray-900;
+:root {
+  --app-bg: #eef3f7;
+  --app-bg-accent: #d8e8f5;
+  --text-primary: #0f172a;
 }
 
+body {
+  font-family: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background:
+    radial-gradient(circle at 15% 15%, var(--app-bg-accent) 0, transparent 32%),
+    radial-gradient(circle at 82% 2%, #d8f4f3 0, transparent 28%),
+    var(--app-bg);
+  color: var(--text-primary);
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Noto Serif SC", "STSong", serif;
+}

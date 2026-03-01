@@ -6,10 +6,12 @@ import InputArea from "./components/InputArea";
 import SuggestionChips from "./components/SuggestionChips";
 import HumanTransfer from "./components/HumanTransfer";
 import { useChat } from "./hooks/useChat";
+import { useUser } from "@/contexts/UserContext";
 
 const { Title, Text } = Typography;
 
 const ChatPage: React.FC = () => {
+  const { userId, userPhone } = useUser();
   const {
     messages,
     loading,
@@ -29,6 +31,7 @@ const ChatPage: React.FC = () => {
     }
     return [] as string[];
   }, [messages]);
+  const userDisplay = userPhone ? userPhone : `ID:${userId}`;
 
   return (
     <div className="h-full flex flex-col">
@@ -38,7 +41,7 @@ const ChatPage: React.FC = () => {
             智能流量套餐助手
           </Title>
           <Text type="secondary">
-            可以帮你查询流量用量、话费余额，推荐更合适的流量套餐，并协助领取权益或处理投诉。
+            当前用户：{userDisplay}。可以查询用量、推荐套餐、领取权益，并在需要时发起人工转接。
           </Text>
         </div>
 
@@ -64,4 +67,3 @@ const ChatPage: React.FC = () => {
 };
 
 export default ChatPage;
-

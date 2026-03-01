@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from app.core.config import settings
 from app.database import SessionLocal
 from app.models import Package, UsageRecord, UserPackage
-from app.services import usage_service
+from app.services import usage_service, user_package_service
 
 
 async def get_current_usage(user_id: str) -> dict:
@@ -95,7 +95,7 @@ async def get_realtime_usage(user_id: str) -> dict:
             .join(UserPackage, UserPackage.package_id == Package.id)
             .where(
                 UserPackage.user_id == user_id_int,
-                UserPackage.status == "active",
+                *user_package_service.active_user_package_filters(),
             )
         )
         current_pkg = db.execute(pkg_stmt).scalars().first()
@@ -469,5 +469,4 @@ async def generate_usage_report(user_id: str, month: str | None = None) -> str:
         return "\n".join(report_lines)
     finally:
         db.close()
-
 

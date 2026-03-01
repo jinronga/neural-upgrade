@@ -50,7 +50,7 @@ const PackageDetail: React.FC<Props> = ({ pkg, open, onClose }) => {
             </div>
           </div>
 
-          <div className="rounded-xl bg-gray-50 px-3 py-2">
+            <div className="rounded-xl bg-gray-50 px-3 py-2">
             <div className="mb-1 text-xs font-semibold text-gray-700">
               资源配置
             </div>
@@ -58,7 +58,12 @@ const PackageDetail: React.FC<Props> = ({ pkg, open, onClose }) => {
               <span>流量 {pkg.dataGb} GB</span>
               <span>语音 {pkg.voiceMinutes} 分钟</span>
               <span>短信 {pkg.smsCount} 条</span>
+              <span>有效期 {pkg.validityDays} 天</span>
             </div>
+          </div>
+
+          <div className="text-xs text-gray-500">
+            状态：{pkg.isActive ? "可办理" : "暂不可办理"}
           </div>
 
           {pkg.tags.length > 0 && (
@@ -129,4 +134,3 @@ const PackageDetail: React.FC<Props> = ({ pkg, open, onClose }) => {
 };
 
 export default PackageDetail;
-

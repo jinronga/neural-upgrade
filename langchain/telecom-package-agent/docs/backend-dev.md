@@ -107,9 +107,19 @@ backend/.venv/bin/pip install -r requirements.txt
 
 ```bash
 cd backend
-chmod +x start.sh
-./start.sh
+chmod +x start
+./start
 ```
+
+常用管理命令：
+
+```bash
+./start status
+./start stop
+./start restart
+```
+
+> 兼容说明：`./start.sh` 仍可使用，但推荐统一使用 `./start`。
 
 ### 方式二：使用 uvicorn 命令
 
@@ -130,9 +140,10 @@ PYTHONPATH=backend backend/.venv/bin/uvicorn app.main:app --reload --host 0.0.0.
 
 ## 六、验证服务
 
-- **健康检查**：`http://localhost:8000/health` 应返回 `{"status":"ok"}`
-- **API 文档**：`http://localhost:8000/docs`
-- **ReDoc**：`http://localhost:8000/redoc`
+- 使用 `./start` 启动时，默认端口为 `8005`。
+- **健康检查**：`http://localhost:8005/health` 应返回 `{"status":"ok"}`
+- **API 文档**：`http://localhost:8005/docs`
+- **ReDoc**：`http://localhost:8005/redoc`
 
 ---
 
@@ -152,7 +163,8 @@ backend/
 ├── .env               # 环境变量（不提交）
 ├── .venv/             # 虚拟环境
 ├── requirements.txt
-└── start.sh           # 启动脚本
+├── start              # 启动脚本（推荐）
+└── start.sh           # 兼容入口（转发到 ./start）
 ```
 
 ---

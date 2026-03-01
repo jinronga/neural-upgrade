@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Package, UsageRecord, UserPackage
+from app.services import user_package_service
 
 
 def get_all_packages(db: Session) -> list[Package]:
@@ -57,7 +58,10 @@ def recommend_package(
         stmt_budget = (
             select(func.coalesce(func.sum(Package.monthly_fee), 0.0))
             .join(UserPackage, UserPackage.package_id == Package.id)
-            .where(UserPackage.user_id == user_id, UserPackage.status == "active")
+            .where(
+                UserPackage.user_id == user_id,
+                *user_package_service.active_user_package_filters(),
+            )
         )
         max_budget = db.execute(stmt_budget).scalar_one()
 
@@ -81,9 +85,11 @@ def calculate_upgrade_cost(
     stmt = (
         select(func.coalesce(func.sum(Package.monthly_fee), 0.0))
         .join(UserPackage, UserPackage.package_id == Package.id)
-        .where(UserPackage.user_id == user_id, UserPackage.status == "active")
+        .where(
+            UserPackage.user_id == user_id,
+            *user_package_service.active_user_package_filters(),
+        )
     )
     current_monthly = db.execute(stmt).scalar_one()
     diff = float(target.monthly_fee) - float(current_monthly)
     return max(diff, 0.0)
-

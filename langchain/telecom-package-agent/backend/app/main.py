@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.api_v1.router import api_router
 from app.core.config import settings
@@ -8,6 +9,18 @@ from app.core.config import settings
 
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.APP_NAME)
+
+    # 允许本地前端开发服务器访问后端 API
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # Health check
     @app.get("/health", tags=["health"])
@@ -21,4 +34,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-

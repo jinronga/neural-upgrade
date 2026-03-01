@@ -37,7 +37,7 @@ async def classify_complaint(message: str) -> dict:
 """
     llm_kwargs = settings.get_openai_client_kwargs()
     llm = ChatOpenAI(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         temperature=0.0,
         **llm_kwargs,
     )

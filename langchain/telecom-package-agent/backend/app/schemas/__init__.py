@@ -1,7 +1,22 @@
 """Pydantic schemas for API request and response models."""
 
-from .user import UserRead
-from .package import PackageRead, PackageRecommendRequest, PackageRecommendResponse
+from .user import (
+    UserCreate,
+    UserCurrentPackageResponse,
+    UserPackageAssignRequest,
+    UserPackagePageResponse,
+    UserPackageRead,
+    UserRead,
+    UserUpdate,
+)
+from .package import (
+    PackageCreate,
+    PackagePageResponse,
+    PackageRead,
+    PackageRecommendRequest,
+    PackageRecommendResponse,
+    PackageUpdate,
+)
 from .benefit import (
     BenefitRead,
     BenefitClaimRequest,
@@ -13,7 +28,16 @@ from .chat import ChatMessageRequest, ChatMessageResponse
 
 __all__ = [
     "UserRead",
+    "UserCreate",
+    "UserUpdate",
+    "UserPackageAssignRequest",
+    "UserPackageRead",
+    "UserPackagePageResponse",
+    "UserCurrentPackageResponse",
     "PackageRead",
+    "PackageCreate",
+    "PackageUpdate",
+    "PackagePageResponse",
     "PackageRecommendRequest",
     "PackageRecommendResponse",
     "BenefitRead",
@@ -25,4 +49,3 @@ __all__ = [
     "ChatMessageRequest",
     "ChatMessageResponse",
 ]
-

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 
-import { post } from "@/services/api";
-import type { ChatResponse, Message } from "../types";
-
-interface UseChatOptions {
-  userId?: string;
-}
+import {
+  ApiChatResponse,
+  sendMessage as sendChatMessage,
+  transferToHuman as transferHumanApi,
+} from "@/services/api";
+import { useUser } from "@/contexts/UserContext";
+import type { ChatResult, Message } from "../types";
 
 interface ChatState {
   messages: Message[];
@@ -16,7 +16,21 @@ interface ChatState {
   lastError?: string;
 }
 
-export const useChat = ({ userId }: UseChatOptions = {}): {
+const mapChatResponse = (resp: ApiChatResponse): ChatResult => ({
+  sessionId: resp.session_id,
+  response: resp.response,
+  suggestions: resp.suggestions ?? [],
+  quickReplies: resp.quick_replies ?? [],
+  needHuman: resp.need_human ?? false,
+  humanTransferReason: resp.human_transfer_reason ?? undefined,
+});
+
+const newId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+export const useChat = (): {
   messages: Message[];
   loading: boolean;
   sessionId?: string;
@@ -26,17 +40,13 @@ export const useChat = ({ userId }: UseChatOptions = {}): {
   sendQuickReply: (content: string) => Promise<void>;
   transferToHuman: (reason: string) => Promise<void>;
 } => {
+  const { userId, userPhone } = useUser();
   const [state, setState] = useState<ChatState>({
     messages: [],
     loading: false,
     sessionId: undefined,
     needHuman: false,
   });
-
-  const effectiveUserId = useMemo(
-    () => userId ?? "10001",
-    [userId],
-  );
 
   const appendMessage = useCallback((msg: Message) => {
     setState((prev) => ({
@@ -45,13 +55,14 @@ export const useChat = ({ userId }: UseChatOptions = {}): {
     }));
   }, []);
 
+  const effectiveUserId = useMemo(() => userId || "1", [userId]);
+
   const sendMessage = useCallback(
     async (content: string) => {
       if (!content.trim()) return;
 
-      const id = uuidv4();
       const userMessage: Message = {
-        id,
+        id: newId(),
         type: "user",
         content,
         timestamp: new Date(),
@@ -61,38 +72,42 @@ export const useChat = ({ userId }: UseChatOptions = {}): {
       setState((prev) => ({ ...prev, loading: true, lastError: undefined }));
 
       try {
-        const payload = {
+        const data = await sendChatMessage({
           user_id: effectiveUserId,
           message: content,
           session_id: state.sessionId,
           channel: "web",
-        };
-        const data = await post<ChatResponse>("/api/v1/chat", payload);
+        });
 
+        const result = mapChatResponse(data);
         const agentMessage: Message = {
-          id: uuidv4(),
+          id: newId(),
           type: "agent",
-          content: data.response,
+          content: result.response,
           timestamp: new Date(),
-          suggestions: data.suggestions,
-          quickReplies: data.quickReplies,
+          suggestions: result.suggestions,
+          quickReplies: result.quickReplies,
         };
 
         setState((prev) => ({
           ...prev,
           messages: [...prev.messages, agentMessage],
-          sessionId: data.sessionId,
-          needHuman: data.needHuman,
+          sessionId: result.sessionId,
+          needHuman: result.needHuman,
           lastError: undefined,
         }));
       } catch (error: any) {
+        const statusCode = error?.response?.status;
         const message =
           error?.response?.data?.detail ??
+          (statusCode === 500
+            ? "聊天服务暂不可用，请检查后端 OPENAI_API_KEY / OPENAI_BASE_URL 配置。"
+            : undefined) ??
           error?.message ??
           "发送消息失败，请稍后重试。";
 
         appendMessage({
-          id: uuidv4(),
+          id: newId(),
           type: "system",
           content: message,
           timestamp: new Date(),
@@ -121,18 +136,17 @@ export const useChat = ({ userId }: UseChatOptions = {}): {
       if (!state.sessionId) return;
 
       setState((prev) => ({ ...prev, loading: true, lastError: undefined }));
-
       try {
-        await post("/api/v1/chat/transfer-human", {
+        await transferHumanApi({
           session_id: state.sessionId,
           user_id: effectiveUserId,
           reason,
         });
 
         appendMessage({
-          id: uuidv4(),
+          id: newId(),
           type: "human",
-          content: "已为你申请转接人工客服，请稍候人工专席的回复。",
+          content: "已为你创建人工客服工单，请稍候专席客服联系你。",
           timestamp: new Date(),
         });
 
@@ -141,12 +155,17 @@ export const useChat = ({ userId }: UseChatOptions = {}): {
           needHuman: true,
         }));
       } catch (error: any) {
+        const statusCode = error?.response?.status;
         const message =
           error?.response?.data?.detail ??
+          (statusCode === 500
+            ? "人工转接服务暂不可用，请稍后重试。"
+            : undefined) ??
           error?.message ??
           "转人工失败，请稍后重试。";
+
         appendMessage({
-          id: uuidv4(),
+          id: newId(),
           type: "system",
           content: message,
           timestamp: new Date(),
@@ -160,18 +179,21 @@ export const useChat = ({ userId }: UseChatOptions = {}): {
   );
 
   useEffect(() => {
+    const userDisplay = userPhone ? userPhone : `ID:${effectiveUserId}`;
     const welcome: Message = {
-      id: uuidv4(),
+      id: newId(),
       type: "system",
-      content: "你好，我是智能流量套餐助手，有什么可以帮你的吗？",
+      content: `你好，我是智能流量套餐助手。当前用户是 ${userDisplay}，你可以直接问我套餐、用量或权益问题。`,
       timestamp: new Date(),
     };
-    setState((prev) =>
-      prev.messages.length === 0
-        ? { ...prev, messages: [welcome] }
-        : prev
-    );
-  }, []);
+    setState({
+      messages: [welcome],
+      loading: false,
+      sessionId: undefined,
+      needHuman: false,
+      lastError: undefined,
+    });
+  }, [effectiveUserId, userPhone]);
 
   return {
     messages: state.messages,
@@ -184,4 +206,3 @@ export const useChat = ({ userId }: UseChatOptions = {}): {
     transferToHuman,
   };
 };
-

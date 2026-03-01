@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 
 from app.database import SessionLocal
 from app.models import Package, UserPackage
-from app.services import package_service
+from app.services import package_service, user_package_service
 
 
 async def estimate_upgrade_cost(user_id: str, target_package_id: str) -> dict:
@@ -63,7 +63,7 @@ async def check_change_eligibility(user_id: str, target_package_id: str) -> dict
             select(UserPackage)
             .where(
                 UserPackage.user_id == user_id_int,
-                UserPackage.status == "active",
+                *user_package_service.active_user_package_filters(),
             )
             .order_by(UserPackage.start_date.desc())
         )
@@ -124,7 +124,7 @@ async def calculate_change_cost(user_id: str, target_package_id: str) -> dict:
             select(UserPackage)
             .where(
                 UserPackage.user_id == user_id_int,
-                UserPackage.status == "active",
+                *user_package_service.active_user_package_filters(),
             )
             .order_by(UserPackage.start_date.desc())
         )
@@ -314,4 +314,3 @@ async def cancel_change_request(change_id: str) -> dict:
         "status": "cancelled",
         "message": "已为你取消本次套餐变更申请，如需重新办理可以随时告诉我。",
     }
-

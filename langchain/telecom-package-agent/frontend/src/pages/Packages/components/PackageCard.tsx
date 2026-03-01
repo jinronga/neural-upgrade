@@ -44,6 +44,7 @@ const PackageCard: React.FC<Props> = ({
         <span>流量 {pkg.dataGb}GB</span>
         <span>语音 {pkg.voiceMinutes} 分钟</span>
         <span>短信 {pkg.smsCount} 条</span>
+        <span>有效期 {pkg.validityDays} 天</span>
       </div>
       <div className="mb-3 flex flex-wrap gap-1">
         {pkg.tags.slice(0, 4).map((tag) => (
@@ -56,6 +57,15 @@ const PackageCard: React.FC<Props> = ({
         ))}
       </div>
       <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+        <span
+          className={`rounded-full px-2 py-0.5 text-[11px] ${
+            pkg.isActive
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          {pkg.isActive ? "在售" : "已下架"}
+        </span>
         <button
           type="button"
           onClick={onViewDetail}
@@ -80,4 +90,3 @@ const PackageCard: React.FC<Props> = ({
 };
 
 export default PackageCard;
-

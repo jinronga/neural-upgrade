@@ -13,7 +13,7 @@
 - [ ] **前端 API 地址**：在 `frontend` 配置 `VITE_API_BASE_URL` 指向后端，例如 `http://localhost:8000`。
 - [ ] **依赖安装**：
   - [ ] 后端（virtualenv 或 poetry/pip）：安装 FastAPI / SQLAlchemy / LangChain / Redis 驱动 等依赖。
-  - [ ] 前端（在 `frontend`）：`npm install` 或等效命令执行成功。
+  - [ ] 前端（在 `frontend`）：`yarn install` 或等效命令执行成功。
 
 ---
 
@@ -98,8 +98,8 @@
 #### 6.1 启动前端
 
 - [ ] 在 `frontend` 目录执行：
-  - [ ] `npm install`
-  - [ ] `npm run dev`
+  - [ ] `yarn install`
+  - [ ] `yarn dev`
 - [ ] 浏览器访问 Vite 提供的地址（默认 `http://localhost:5173`）正常。
 
 #### 6.2 页面功能
@@ -132,4 +132,3 @@
 - [ ] “冒烟测试”完整业务链：
   - [ ] 新建测试用户与套餐/权益数据。
   - [ ] 依次体验：Dashboard → Chat 查询套餐/用量 → Packages 浏览/对比 → Benefits 领取 → 投诉一个场景 → 查看续费提醒。
-
